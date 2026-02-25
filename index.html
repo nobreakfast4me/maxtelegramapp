@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meine Telegram Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            /* Diese Variablen sorgen dafür, dass sich die Farben an Telegram anpassen */
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Willkommen bei meiner App</h1>
+        <p>Dies ist eine plane Vorlage.</p>
+        <button id="mainButton">Sag Hallo</button>
+    </div>
+
+    <script>
+        // Initialisiert die Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Macht die App direkt groß beim Öffnen
+
+        document.getElementById('mainButton').addEventListener('click', () => {
+            tg.showAlert("Hallo! Dein Grundgerüst steht.");
+        });
+    </script>
+</body>
+</html>
