@@ -187,7 +187,7 @@
         </div>
       </div>
       <div class="info-box" id="cart-summary"></div>
-      <button class="tg-pay-btn" onclick="sendOrderNotification();showScreen('track')">✈️ Mit Telegram Pay bezahlen</button>
+      <button class="tg-pay-btn" onclick="placeOrder()">✈️ Mit Telegram Pay bezahlen</button>
     </div>
   </div>
 </div>
@@ -260,6 +260,48 @@
     </div>
     <div style="font-size:13px;font-weight:800;margin-bottom:12px">Bestellstatus</div>
     <div id="track-steps"></div>
+  </div>
+</div>
+
+<!-- ORDER STATUS (post-order) -->
+<div id="screen-orderstatus" class="screen">
+  <div class="section-pad">
+    <!-- Status Card -->
+    <div style="background:linear-gradient(135deg,#064E3B,#065F46);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:20px;text-align:center;margin-bottom:16px">
+      <div id="status-icon" style="font-size:50px;margin-bottom:8px">⏳</div>
+      <div id="status-title" style="font-size:16px;font-weight:900;margin-bottom:4px">Bestellung eingegangen</div>
+      <div id="status-sub" style="font-size:11px;color:#6EE7B7">Max prüft deine Bestellung...</div>
+      <div style="margin-top:12px;background:rgba(0,0,0,0.3);border-radius:12px;padding:8px 14px;display:inline-block">
+        <span style="font-size:11px;color:#10B981;font-weight:700">⏱ Geschätzte Lieferzeit: ~25-35 Min</span>
+      </div>
+    </div>
+
+    <!-- Progress Steps -->
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px;margin-bottom:16px">
+      <div id="progress-steps"></div>
+    </div>
+
+    <!-- Extras -->
+    <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:16px;padding:16px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">➕ Extra hinzufügen</div>
+      <div id="extra-timer" style="font-size:10px;color:#A855F7;margin-bottom:12px">Noch innerhalb des Zeitfensters</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px" id="extra-btns">
+        <button onclick="orderExtra('Extra Käse','€1.00')" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(168,85,247,0.3);background:rgba(168,85,247,0.1);color:#A855F7;font-size:11px;font-weight:700;cursor:pointer">🧀 Käse +€1</button>
+        <button onclick="orderExtra('Chili-Öl','€0.50')" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(168,85,247,0.3);background:rgba(168,85,247,0.1);color:#A855F7;font-size:11px;font-weight:700;cursor:pointer">🌶️ Chili-Öl +€0.50</button>
+        <button onclick="orderExtra('Cola','€2.50')" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(168,85,247,0.3);background:rgba(168,85,247,0.1);color:#A855F7;font-size:11px;font-weight:700;cursor:pointer">🥤 Cola +€2.50</button>
+        <button onclick="orderExtra('Pommes','€3.50')" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(168,85,247,0.3);background:rgba(168,85,247,0.1);color:#A855F7;font-size:11px;font-weight:700;cursor:pointer">🍟 Pommes +€3.50</button>
+      </div>
+    </div>
+
+    <!-- Frage stellen -->
+    <div style="background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.2);border-radius:16px;padding:16px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:800;margin-bottom:10px">💬 Frage an Max stellen</div>
+      <textarea id="question-input" placeholder="z.B. Bitte ohne Zwiebeln..." style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(6,182,212,0.2);border-radius:10px;padding:10px;color:#fff;font-size:12px;resize:none;height:70px;font-family:inherit"></textarea>
+      <button onclick="sendQuestion()" style="margin-top:8px;width:100%;padding:10px;border-radius:10px;border:none;background:linear-gradient(90deg,#0088CC,#06B6D4);color:#fff;font-size:13px;font-weight:700;cursor:pointer">📤 Senden</button>
+    </div>
+
+    <!-- Stornieren -->
+    <button onclick="cancelOrder()" style="width:100%;padding:12px;border-radius:12px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#EF4444;font-size:13px;font-weight:700;cursor:pointer">❌ Bestellung stornieren</button>
   </div>
 </div>
 
@@ -449,6 +491,139 @@ function renderTrack(){
 
 // ─── TELEGRAM NOTIFICATION ───────────────────────────────────────────────────
 async function sendOrderNotification(){
+  if(cart.length===0) return;
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const customerChatId = tgUser?.id ? String(tgUser.id) : '';
+  const customerName = tgUser ? (tgUser.username ? '@'+tgUser.username : tgUser.first_name) : 'Unbekannt';
+  const orderTime = Date.now();
+  const sub = cart.reduce((a,b)=>a+b.price*b.qty,0);
+  const total = (sub+2.5+tip).toFixed(2);
+  const items = cart.map(i=>`• ${i.emoji} ${i.name} x${i.qty} — €${(i.price*i.qty).toFixed(2)}`).join('\n');
+  const msg = `🆕 *Neue Bestellung!*\n\n👤 ${customerName}\nChat-ID: ${customerChatId}\n\n${items}\n\n📍 Leopoldstraße 15, München\n💝 Trinkgeld: €${tip.toFixed(2)}\n🚚 Liefergebühr: €2.50\n💰 *Gesamt: €${total}*\n\n_Bitte bestätigen oder ablehnen._`;
+  try {
+    await fetch(`https://api.telegram.org/bot8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o/sendMessage`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        chat_id:'1618777001',
+        text:msg,
+        parse_mode:'Markdown',
+        reply_markup:{inline_keyboard:[[
+          {text:'✅ Bestätigen',callback_data:`confirm|${customerChatId}|${orderTime}`},
+          {text:'❌ Ablehnen',callback_data:`decline|${customerChatId}|${orderTime}`}
+        ]]}
+      })
+    });
+  } catch(e){ console.log('Notification error',e); }
+  return orderTime;
+}
+
+let currentOrderTime = null;
+
+async function placeOrder(){
+  if(cart.length===0) return;
+  currentOrderTime = await sendOrderNotification();
+  cart=[];
+  updCartBadge();
+  showScreen('orderstatus');
+  initOrderStatus();
+}
+
+const ORDER_STEPS = [
+  {icon:'📋',label:'Bestellung eingegangen'},
+  {icon:'👨‍🍳',label:'Wird zubereitet'},
+  {icon:'📦',label:'Wird verpackt'},
+  {icon:'🛵',label:'Fahrer unterwegs'},
+  {icon:'🏠',label:'Zugestellt'},
+];
+let orderStep = 0;
+let orderInterval = null;
+
+function initOrderStatus(){
+  orderStep = 0;
+  renderProgressSteps();
+  if(orderInterval) clearInterval(orderInterval);
+  orderInterval = setInterval(()=>{
+    if(orderStep < ORDER_STEPS.length-1){
+      orderStep++;
+      renderProgressSteps();
+      updateStatusCard();
+    } else {
+      clearInterval(orderInterval);
+    }
+  }, 8000);
+  updateExtraTimer();
+}
+
+function renderProgressSteps(){
+  document.getElementById('progress-steps').innerHTML = ORDER_STEPS.map((s,i)=>{
+    const done = i <= orderStep;
+    const current = i === orderStep;
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:${i<ORDER_STEPS.length-1?'12':'0'}px">
+      <div style="width:32px;height:32px;border-radius:50%;background:${done?'rgba(16,185,129,0.2)':'rgba(255,255,255,0.04)'};border:2px solid ${done?'#10B981':'rgba(255,255,255,0.1)'};display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all 0.5s">${done&&!current?'✓':s.icon}</div>
+      <div style="font-size:12px;font-weight:${current?'800':'600'};color:${done?'#fff':'#444'}">${s.label}${current?'<span style="font-size:10px;color:#10B981;margin-left:6px">← jetzt</span>':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateStatusCard(){
+  const step = ORDER_STEPS[orderStep];
+  const icons = ['⏳','👨‍🍳','📦','🛵','🎉'];
+  const subs = ['Max prüft deine Bestellung...','Dein Essen wird frisch gekocht 🔥','Fast fertig! Wird verpackt...','Fahrer ist unterwegs zu dir! 🛵','Zugestellt! Guten Appetit! 🎉'];
+  document.getElementById('status-icon').textContent = icons[orderStep];
+  document.getElementById('status-title').textContent = step.label;
+  document.getElementById('status-sub').textContent = subs[orderStep];
+}
+
+function updateExtraTimer(){
+  if(!currentOrderTime) return;
+  const interval = setInterval(()=>{
+    const mins = Math.floor(10 - (Date.now() - currentOrderTime) / 60000);
+    const el = document.getElementById('extra-timer');
+    const btns = document.getElementById('extra-btns');
+    if(!el) { clearInterval(interval); return; }
+    if(mins > 0){
+      el.textContent = `⏰ Noch ${mins} Minuten um Extras hinzuzufügen`;
+      el.style.color = mins <= 3 ? '#EF4444' : '#A855F7';
+    } else {
+      el.textContent = '⏰ Zeitfenster abgelaufen';
+      el.style.color = '#555';
+      if(btns) btns.querySelectorAll('button').forEach(b=>{ b.disabled=true; b.style.opacity='0.3'; });
+      clearInterval(interval);
+    }
+  }, 10000);
+}
+
+async function orderExtra(name, price){
+  const mins = currentOrderTime ? Math.floor(10 - (Date.now() - currentOrderTime) / 60000) : -1;
+  if(mins <= 0){ alert('Zeitfenster abgelaufen!'); return; }
+  await fetch(`https://api.telegram.org/bot8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o/sendMessage`,{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({chat_id:'1618777001', text:`➕ *Extra-Wunsch!*\n\nKunde möchte hinzufügen:\n${name} ${price}`, parse_mode:'Markdown'})
+  });
+  alert(`✅ ${name} wurde angefragt! Max wird es hinzufügen.`);
+}
+
+async function sendQuestion(){
+  const q = document.getElementById('question-input').value.trim();
+  if(!q) return;
+  await fetch(`https://api.telegram.org/bot8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o/sendMessage`,{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({chat_id:'1618777001', text:`💬 *Frage vom Kunden:*\n\n"${q}"`, parse_mode:'Markdown'})
+  });
+  document.getElementById('question-input').value='';
+  alert('✅ Frage gesendet! Max meldet sich gleich.');
+}
+
+async function cancelOrder(){
+  if(!confirm('Bestellung wirklich stornieren?')) return;
+  await fetch(`https://api.telegram.org/bot8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o/sendMessage`,{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({chat_id:'1618777001', text:`❌ *Kunde hat storniert!*`, parse_mode:'Markdown'})
+  });
+  if(orderInterval) clearInterval(orderInterval);
+  showScreen('home');
+}
   if(cart.length===0) return;
   const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
   const customerChatId = tgUser?.id ? String(tgUser.id) : '';
