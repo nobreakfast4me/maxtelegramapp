@@ -1,53 +1,453 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meine Telegram Mini App</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            /* Diese Variablen sorgen dafür, dass sich die Farben an Telegram anpassen */
-            background-color: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            text-align: center;
-            padding: 20px;
-        }
-        button {
-            background-color: var(--tg-theme-button-color, #2481cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Max Delivery</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  ::-webkit-scrollbar { display: none; }
+  body { background: #0E1621; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif; color: #fff; max-width: 430px; margin: 0 auto; }
+  .screen { display: none; padding-bottom: 90px; }
+  .screen.active { display: block; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: rgba(14,22,33,0.97); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.07); display: flex; justify-content: space-around; padding: 10px 0 20px; z-index: 100; }
+  .nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 16px; }
+  .nav-btn .nav-label { font-size: 9px; font-weight: 700; color: #555; transition: all 0.2s; }
+  .nav-btn.active .nav-label { color: #FF6B35; }
+  .nav-dot { width: 3px; height: 3px; border-radius: 50%; background: #FF6B35; display: none; }
+  .nav-btn.active .nav-dot { display: block; }
+
+  .hero { background: linear-gradient(135deg,#1A1A2E,#16213E,#0F3460); padding: 28px 18px 22px; position: relative; overflow: hidden; }
+  .search-bar { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; color: #444; font-size: 13px; }
+  .usp-row { padding: 14px 14px 0; display: flex; gap: 8px; }
+  .usp-btn { flex: 1; border-radius: 14px; padding: 12px 6px; cursor: pointer; text-align: center; border: 1px solid; }
+
+  .product-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 10px; }
+  .product-card:active { background: rgba(255,255,255,0.07); }
+  .product-emoji-box { width: 60px; height: 60px; border-radius: 12px; background: rgba(255,107,53,0.1); display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; }
+  .badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 20px; border: 1px solid; }
+  .add-btn { width: 28px; height: 28px; border-radius: 8px; background: #FF6B35; border: none; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 6px; margin-left: auto; }
+
+  .cat-scroll { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
+  .cat-btn { flex-shrink: 0; padding: 6px 12px; border-radius: 20px; border: none; background: rgba(255,255,255,0.06); color: #888; font-size: 11px; font-weight: 700; cursor: pointer; }
+  .cat-btn.active { background: #FF6B35; color: #fff; }
+
+  .ingredient-chip { padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: #555; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: line-through; }
+  .ingredient-chip.on { border-color: #FF6B35; background: rgba(255,107,53,0.15); color: #FF6B35; text-decoration: none; }
+  .ingredient-chip.extra { text-decoration: none; }
+  .ingredient-chip.extra.on { border-color: #A855F7; background: rgba(168,85,247,0.15); color: #A855F7; }
+
+  .qty-ctrl { display: flex; align-items: center; background: rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; }
+  .qty-btn { width: 38px; height: 44px; background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; }
+
+  .cart-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 12px; margin-bottom: 9px; display: flex; align-items: center; gap: 12px; }
+  .tip-btn { flex: 1; padding: 9px 0; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: #777; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .tip-btn.on { border-color: #FF6B35; background: rgba(255,107,53,0.2); color: #FF6B35; }
+  .tg-pay-btn { width: 100%; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(90deg,#0088CC,#006AA3); color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 20px rgba(0,136,204,0.4); }
+
+  .map-ph { margin-top: 8px; height: 100px; border-radius: 12px; background: linear-gradient(135deg,#0F2027,#203A43,#2C5364); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.07); position: relative; overflow: hidden; }
+  .map-grid { position: absolute; inset: 0; background-image: repeating-linear-gradient(0deg,transparent,transparent 20px,rgba(255,255,255,0.03) 20px,rgba(255,255,255,0.03) 21px),repeating-linear-gradient(90deg,transparent,transparent 20px,rgba(255,255,255,0.03) 20px,rgba(255,255,255,0.03) 21px); }
+
+  .mood-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-bottom: 20px; }
+  .mood-btn { padding: 14px 6px; border-radius: 14px; border: 2px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); cursor: pointer; text-align: center; }
+  .mood-btn.on { border-color: #A855F7; background: rgba(168,85,247,0.15); }
+  .mood-suggestion { background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.2); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 9px; }
+
+  .live-stream { border-radius: 18px; overflow: hidden; margin-bottom: 18px; border: 1px solid rgba(16,185,129,0.3); }
+  .stream-inner { height: 180px; background: linear-gradient(135deg,#0F2027,#203A43); display: flex; align-items: center; justify-content: center; position: relative; }
+  .live-badge { position: absolute; top: 10px; left: 10px; background: #EF4444; border-radius: 5px; padding: 2px 7px; font-size: 9px; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 4px; }
+  .eta-badge { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); border-radius: 7px; padding: 3px 8px; font-size: 10px; font-weight: 700; }
+  .track-step { display: flex; align-items: flex-start; gap: 12px; }
+  .step-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; transition: all 0.5s; }
+
+  .usp-tag { display: inline-block; border-radius: 20px; padding: 3px 10px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .section-pad { padding: 20px 14px 0; }
+  .divider { height: 1px; background: rgba(255,255,255,0.07); margin: 9px 0; }
+  .info-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+  .group-member { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 11px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .split-item { background: rgba(255,255,255,0.04); border-radius: 12px; padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .live-teaser { margin: 10px 14px 20px; background: linear-gradient(90deg,#064E3B,#065F46); border: 1px solid #10B98133; border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px #10B981; animation: pulse 1.5s infinite; margin-left: auto; flex-shrink:0; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Willkommen bei meiner App</h1>
-        <p>Dies ist eine plane Vorlage.</p>
-        <button id="mainButton">Sag Hallo</button>
+
+<div id="screen-home" class="screen active">
+  <div class="hero">
+    <div style="position:absolute;top:-30px;right:-30px;font-size:110px;opacity:0.05;pointer-events:none">🍔</div>
+    <div style="font-size:11px;color:#FF6B35;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">📍 Schwabing, München</div>
+    <div style="font-size:24px;font-weight:900;line-height:1.2;margin-bottom:6px">Was darf es<br>heute sein? 🍽️</div>
+    <div style="font-size:12px;color:#666;margin-bottom:16px">30+ Restaurants · 15–35 Min Lieferung</div>
+    <div class="search-bar"><span>🔍</span><span>Gericht oder Restaurant...</span></div>
+  </div>
+
+  <div class="usp-row">
+    <button class="usp-btn" onclick="showScreen('mood')" style="background:rgba(168,85,247,0.15);border-color:rgba(168,85,247,0.33)">
+      <div style="font-size:20px;margin-bottom:3px">🎭</div><div style="font-size:9px;color:#A855F7;font-weight:700;line-height:1.3">Mood Order</div>
+    </button>
+    <button class="usp-btn" onclick="showScreen('group')" style="background:rgba(6,182,212,0.15);border-color:rgba(6,182,212,0.33)">
+      <div style="font-size:20px;margin-bottom:3px">👥</div><div style="font-size:9px;color:#06B6D4;font-weight:700;line-height:1.3">Gruppen-Order</div>
+    </button>
+    <button class="usp-btn" onclick="showScreen('track')" style="background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.33)">
+      <div style="font-size:20px;margin-bottom:3px">📡</div><div style="font-size:9px;color:#10B981;font-weight:700;line-height:1.3">Live-Küche</div>
+    </button>
+  </div>
+
+  <div class="section-pad">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:15px;font-weight:800">🔥 Bestseller</div>
+      <button onclick="showScreen('menu')" style="background:none;border:none;color:#FF6B35;font-size:12px;cursor:pointer;font-weight:600">Alle →</button>
     </div>
+    <div id="home-products"></div>
+  </div>
 
-    <script>
-        // Initialisiert die Telegram Web App
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // Macht die App direkt groß beim Öffnen
+  <div class="live-teaser" onclick="showScreen('track')">
+    <div style="font-size:26px">📡</div>
+    <div>
+      <div style="font-size:12px;font-weight:700;color:#10B981">Live-Küche aktiv</div>
+      <div style="font-size:10px;color:#6EE7B7">Schau zu wie dein Essen gekocht wird →</div>
+    </div>
+    <div class="live-dot"></div>
+  </div>
+</div>
 
-        document.getElementById('mainButton').addEventListener('click', () => {
-            tg.showAlert("Hallo! Dein Grundgerüst steht.");
-        });
-    </script>
+<div id="screen-menu" class="screen">
+  <div class="section-pad">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button onclick="showScreen('home')" style="background:none;border:none;color:#FF6B35;font-size:13px;font-weight:700;cursor:pointer">←</button>
+      <div style="font-size:18px;font-weight:900">Speisekarte</div>
+    </div>
+    <div class="cat-scroll" id="cat-scroll"></div>
+    <div id="menu-products"></div>
+  </div>
+</div>
+
+<div id="screen-product" class="screen">
+  <div style="height:180px;background:linear-gradient(135deg,#1A1A2E,#16213E);display:flex;align-items:center;justify-content:center;position:relative">
+    <button onclick="showScreen('menu')" style="position:absolute;top:14px;left:14px;background:rgba(0,0,0,0.5);border:none;border-radius:10px;padding:6px 10px;color:#fff;font-size:16px;cursor:pointer">←</button>
+    <span id="detail-emoji" style="font-size:90px"></span>
+  </div>
+  <div class="section-pad">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+      <div id="detail-name" style="font-size:18px;font-weight:900;flex:1;margin-right:8px"></div>
+      <div id="detail-price" style="font-size:18px;font-weight:900;color:#FF6B35"></div>
+    </div>
+    <div id="detail-desc" style="font-size:12px;color:#666;margin-bottom:8px;line-height:1.5"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <span id="detail-stars" style="color:#FFB800;font-size:10px"></span>
+      <span id="detail-time" style="font-size:10px;color:#555"></span>
+      <span id="detail-tags"></span>
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:800;margin-bottom:10px">🥬 Zutaten anpassen</div>
+      <div id="ing-chips" style="display:flex;flex-wrap:wrap;gap:7px"></div>
+    </div>
+    <div style="margin-bottom:22px">
+      <div style="font-size:13px;font-weight:800;margin-bottom:10px">✨ Extras</div>
+      <div id="extra-chips" style="display:flex;flex-wrap:wrap;gap:7px"></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="chQty(-1)">−</button>
+        <div id="qty-num" style="width:28px;text-align:center;font-size:14px;font-weight:800">1</div>
+        <button class="qty-btn" onclick="chQty(1)" style="color:#FF6B35">+</button>
+      </div>
+      <button id="atc-btn" onclick="addCurrent()" style="flex:1;padding:13px;border-radius:13px;border:none;background:linear-gradient(90deg,#FF6B35,#FF4500);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,53,0.4)">🛒 In den Warenkorb</button>
+    </div>
+  </div>
+</div>
+
+<div id="screen-cart" class="screen">
+  <div class="section-pad">
+    <div style="font-size:18px;font-weight:900;margin-bottom:18px">🛒 Warenkorb</div>
+    <div id="cart-empty" style="display:none;text-align:center;padding:50px 0">
+      <div style="font-size:50px;margin-bottom:10px">🍽️</div>
+      <div style="font-size:14px;color:#444;font-weight:700">Noch nichts hier</div>
+      <button onclick="showScreen('menu')" style="margin-top:14px;padding:11px 22px;border-radius:12px;background:#FF6B35;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer">Zur Speisekarte</button>
+    </div>
+    <div id="cart-items"></div>
+    <div id="cart-checkout" style="display:none">
+      <div style="margin-bottom:14px">
+        <div style="font-size:13px;font-weight:800;margin-bottom:8px">📍 Lieferadresse</div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:12px 14px;color:#aaa;font-size:12px;display:flex;justify-content:space-between">
+          <span>Leopoldstraße 15, 80802 München</span><span style="color:#FF6B35;font-weight:700">Ändern</span>
+        </div>
+        <div class="map-ph"><div class="map-grid"></div><div style="position:relative;z-index:1;text-align:center"><div style="font-size:28px">📍</div><div style="font-size:10px;color:#10B981;font-weight:700">Karte wird geladen...</div></div></div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:800;margin-bottom:8px">💝 Trinkgeld</div>
+        <div style="display:flex;gap:7px">
+          <button class="tip-btn" onclick="setTip(0,this)">Kein</button>
+          <button class="tip-btn on" onclick="setTip(1,this)">€1</button>
+          <button class="tip-btn" onclick="setTip(2,this)">€2</button>
+          <button class="tip-btn" onclick="setTip(3,this)">€3</button>
+        </div>
+      </div>
+      <div class="info-box" id="cart-summary"></div>
+      <button class="tg-pay-btn" onclick="showScreen('track')">✈️ Mit Telegram Pay bezahlen</button>
+    </div>
+  </div>
+</div>
+
+<div id="screen-mood" class="screen">
+  <div class="section-pad">
+    <button onclick="showScreen('home')" style="background:none;border:none;color:#FF6B35;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:14px;display:block">← Zurück</button>
+    <div class="usp-tag" style="background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);color:#A855F7">🎭 Unique Feature #1</div>
+    <div style="font-size:22px;font-weight:900;margin-bottom:6px">Mood Ordering</div>
+    <div style="font-size:12px;color:#555;margin-bottom:20px;line-height:1.6">Keine Lust zu entscheiden? Sag uns wie du dich fühlst — wir wählen das perfekte Gericht für dich. 🧠</div>
+    <div style="font-size:13px;font-weight:800;margin-bottom:12px">Wie fühlst du dich gerade?</div>
+    <div class="mood-grid" id="mood-grid"></div>
+    <button id="reveal-btn" onclick="revealMood()" style="display:none;width:100%;padding:13px;border-radius:14px;border:none;background:linear-gradient(90deg,#7C3AED,#A855F7);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(168,85,247,0.4)">✨ Zeig mir mein perfektes Gericht</button>
+    <div id="mood-results"></div>
+  </div>
+</div>
+
+<div id="screen-group" class="screen">
+  <div class="section-pad">
+    <button onclick="showScreen('home')" style="background:none;border:none;color:#FF6B35;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:14px;display:block">← Zurück</button>
+    <div class="usp-tag" style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#06B6D4">👥 Unique Feature #2</div>
+    <div style="font-size:22px;font-weight:900;margin-bottom:6px">Gruppen-Order</div>
+    <div style="font-size:12px;color:#555;margin-bottom:20px;line-height:1.6">Bestellt zusammen mit Freunden aus dem Telegram-Chat. Jeder wählt selbst, automatische Kostenaufteilung via Telegram Pay. 🤝</div>
+    <div id="group-invite">
+      <div style="background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.2);border-radius:16px;padding:18px;text-align:center">
+        <div style="font-size:46px;margin-bottom:8px">👥</div>
+        <div style="font-size:14px;font-weight:800;margin-bottom:5px">Neue Gruppen-Order starten</div>
+        <div style="font-size:11px;color:#666;margin-bottom:14px">Teile den Link im Telegram-Gruppen-Chat</div>
+        <div style="background:rgba(0,0,0,0.3);border-radius:9px;padding:9px 12px;font-size:10px;color:#06B6D4;font-family:monospace;word-break:break-all;margin-bottom:12px;border:1px solid rgba(6,182,212,0.2)">t.me/maxdelivery1907bot?startapp=grouporder_4F7X</div>
+        <button onclick="gPhase('collecting')" style="width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(90deg,#0088CC,#06B6D4);color:#fff;font-size:13px;font-weight:800;cursor:pointer">📤 In Telegram-Chat teilen</button>
+      </div>
+    </div>
+    <div id="group-collecting" style="display:none">
+      <div style="font-size:13px;font-weight:800;margin-bottom:12px">Teilnehmer (3/8)</div>
+      <div class="group-member"><div style="font-size:26px">👨‍💻</div><div style="flex:1"><div style="font-size:13px;font-weight:700">Max</div><div style="font-size:10px;color:#10B981">hat bestellt</div></div><div style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:3px 8px;font-size:10px;color:#10B981;font-weight:700">2 Artikel</div></div>
+      <div class="group-member"><div style="font-size:26px">👩‍🎨</div><div style="flex:1"><div style="font-size:13px;font-weight:700">Sarah</div><div style="font-size:10px;color:#888">wählt noch...</div></div><div style="width:7px;height:7px;border-radius:50%;background:#FFB800;animation:pulse 1.5s infinite"></div></div>
+      <div class="group-member"><div style="font-size:26px">🧑‍🍳</div><div style="flex:1"><div style="font-size:13px;font-weight:700">Lukas</div><div style="font-size:10px;color:#10B981">hat bestellt</div></div><div style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:3px 8px;font-size:10px;color:#10B981;font-weight:700">1 Artikel</div></div>
+      <button onclick="gPhase('splitting')" style="width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(90deg,#059669,#10B981);color:#fff;font-size:13px;font-weight:800;cursor:pointer;margin-top:6px">✅ Order abschließen & aufteilen</button>
+    </div>
+    <div id="group-splitting" style="display:none">
+      <div style="font-size:13px;font-weight:800;margin-bottom:12px">💸 Kostenaufteilung</div>
+      <div class="split-item" style="border:1px solid rgba(16,185,129,0.2)"><div style="font-size:13px;font-weight:700">Max (Du)</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;font-weight:800;color:#FF6B35">€14.90</span><span style="padding:3px 8px;border-radius:8px;background:rgba(16,185,129,0.15);color:#10B981;font-size:9px;font-weight:700">✓ bezahlt</span></div></div>
+      <div class="split-item" style="border:1px solid rgba(255,184,0,0.2)"><div style="font-size:13px;font-weight:700">Sarah</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;font-weight:800;color:#FF6B35">€11.90</span><span style="padding:3px 8px;border-radius:8px;background:rgba(255,184,0,0.15);color:#FFB800;font-size:9px;font-weight:700">⏳ ausstehend</span></div></div>
+      <div class="split-item" style="border:1px solid rgba(16,185,129,0.2)"><div style="font-size:13px;font-weight:700">Lukas</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;font-weight:800;color:#FF6B35">€12.90</span><span style="padding:3px 8px;border-radius:8px;background:rgba(16,185,129,0.15);color:#10B981;font-size:9px;font-weight:700">✓ bezahlt</span></div></div>
+      <button style="width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(90deg,#0088CC,#06B6D4);color:#fff;font-size:13px;font-weight:800;cursor:pointer;margin-top:6px">✈️ Erinnerung via Telegram senden</button>
+    </div>
+  </div>
+</div>
+
+<div id="screen-track" class="screen">
+  <div class="section-pad">
+    <button onclick="showScreen('home')" style="background:none;border:none;color:#FF6B35;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:14px;display:block">← Zurück</button>
+    <div class="usp-tag" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10B981">📡 Unique Feature #3</div>
+    <div style="font-size:22px;font-weight:900;margin-bottom:6px">Live-Küche & Tracking</div>
+    <div style="font-size:12px;color:#555;margin-bottom:20px;line-height:1.6">Sieh in Echtzeit wie dein Essen zubereitet wird. Transparenz auf einem neuen Level. 🍳</div>
+    <div class="live-stream">
+      <div class="stream-inner">
+        <div style="text-align:center"><div style="font-size:56px;margin-bottom:6px">👨‍🍳</div><div style="font-size:12px;color:#10B981;font-weight:700">Live-Küche · Smash Burger</div><div style="font-size:10px;color:#444;margin-top:3px">HD Stream aktiv</div></div>
+        <div class="live-badge"><div style="width:5px;height:5px;border-radius:50%;background:#fff;animation:pulse 1s infinite"></div> LIVE</div>
+        <div class="eta-badge" id="eta-badge">⏱ ~18 Min</div>
+      </div>
+      <div style="padding:8px 14px;background:rgba(0,0,0,0.9);display:flex;gap:14px;align-items:center">
+        <span style="font-size:10px;color:#444">Reagieren:</span>
+        <button style="background:none;border:none;font-size:18px;cursor:pointer">🔥</button>
+        <button style="background:none;border:none;font-size:18px;cursor:pointer">😋</button>
+        <button style="background:none;border:none;font-size:18px;cursor:pointer">👏</button>
+        <button style="background:none;border:none;font-size:18px;cursor:pointer">❤️</button>
+        <span style="margin-left:auto;font-size:10px;color:#10B981">👁 42 schauen zu</span>
+      </div>
+    </div>
+    <div style="font-size:13px;font-weight:800;margin-bottom:12px">Bestellstatus</div>
+    <div id="track-steps"></div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="showScreen('home')" id="nav-home"><span style="font-size:20px">🏠</span><div class="nav-label">Home</div><div class="nav-dot"></div></button>
+  <button class="nav-btn" onclick="showScreen('menu')" id="nav-menu"><span style="font-size:20px">🍽️</span><div class="nav-label">Karte</div><div class="nav-dot"></div></button>
+  <button class="nav-btn" onclick="showScreen('cart')" id="nav-cart"><span style="font-size:20px">🛒</span><div class="nav-label" id="nav-cart-label">Korb</div><div class="nav-dot"></div></button>
+  <button class="nav-btn" onclick="showScreen('track')" id="nav-track"><span style="font-size:20px">📡</span><div class="nav-label">Live</div><div class="nav-dot"></div></button>
+</nav>
+
+<script>
+const PRODUCTS = [
+  {id:1,name:"Smash Burger Deluxe",desc:"Doppelter Smash-Patty, karamellisierte Zwiebeln, geheime Sauce",price:14.9,emoji:"🍔",category:"Burger",rating:4.9,time:"18 Min",ingredients:["Doppelpatty","Käse","Zwiebeln","Salat","Tomate","Geheime Sauce"],tags:["Bestseller","Scharf"],popular:true},
+  {id:2,name:"Truffle Frites",desc:"Hausgemachte Pommes mit Trüffelöl & Parmesan",price:7.5,emoji:"🍟",category:"Beilagen",rating:4.7,time:"12 Min",ingredients:["Kartoffeln","Trüffelöl","Parmesan","Rosmarin","Meersalz"],tags:["Vegetarisch"]},
+  {id:3,name:"Spicy Chicken Wings",desc:"12 Stück in Buffalo-Marinade, 48h eingelegt",price:12.9,emoji:"🍗",category:"Wings",rating:4.8,time:"22 Min",ingredients:["Chicken Wings","Buffalo Sauce","Knoblauch","Honig","Chili"],tags:["Bestseller","Scharf"],popular:true},
+  {id:4,name:"Caesar Salad Premium",desc:"Römischer Salat, hausgemachtes Dressing, Croutons",price:11.9,emoji:"🥗",category:"Salate",rating:4.6,time:"10 Min",ingredients:["Romana Salat","Parmesan","Croutons","Anchovis","Caesar Dressing"],tags:["Vegetarisch"]},
+  {id:5,name:"Margherita Napoletana",desc:"San Marzano Tomaten, Büffelmozzarella, Basilikum",price:13.9,emoji:"🍕",category:"Pizza",rating:4.9,time:"20 Min",ingredients:["San Marzano","Büffelmozzarella","Basilikum","Olivenöl"],tags:["Vegetarisch"],popular:true},
+  {id:6,name:"Mango Lassi",desc:"Frische Alphonso-Mangos, griechischer Joghurt, Kardamom",price:5.5,emoji:"🥭",category:"Getränke",rating:4.8,time:"5 Min",ingredients:["Alphonso Mango","Joghurt","Kardamom","Rosenwasser"],tags:["Vegetarisch"]},
+  {id:7,name:"Ramen Tonkotsu",desc:"72h gekochte Brühe, Chashu Pork, Ajitama Ei, Nori",price:16.9,emoji:"🍜",category:"Ramen",rating:4.9,time:"25 Min",ingredients:["Tonkotsu Brühe","Chashu Pork","Ajitama Ei","Nori","Bambussprossen"],tags:["Bestseller"],popular:true},
+  {id:8,name:"Chocolate Lava Cake",desc:"Warmer Schokoladenkuchen, flüssiger Kern, Vanilleeis",price:8.9,emoji:"🍫",category:"Desserts",rating:4.7,time:"15 Min",ingredients:["Valrhona Schokolade","Butter","Eier","Vanilleeis"],tags:["Süß"]},
+];
+const CATEGORIES=["Alle","Burger","Pizza","Wings","Ramen","Salate","Beilagen","Desserts","Getränke"];
+const MOODS=[{emoji:"😴",label:"Müde",suggest:[1,7,3]},{emoji:"💪",label:"Fit",suggest:[4,6,2]},{emoji:"🎉",label:"Feierlaune",suggest:[1,3,8]},{emoji:"😰",label:"Gestresst",suggest:[7,8,6]},{emoji:"🔥",label:"Hungrig",suggest:[1,7,5]},{emoji:"🌿",label:"Leicht",suggest:[4,6,2]}];
+const EXTRAS=["Extra Käse +1€","Doppelte Sauce +0.5€","Chili-Öl +0.5€","Glutenfrei +2€"];
+const TRACK_STEPS=[{icon:"👨‍🍳",label:"Bestellung angenommen"},{icon:"🔪",label:"Zubereitung gestartet"},{icon:"🍳",label:"Am Grill"},{icon:"📦",label:"Wird verpackt"},{icon:"🛵",label:"Fahrer unterwegs"},{icon:"🏠",label:"Zugestellt"}];
+
+let cart=[],curP=null,curQty=1,selIng=[],selMood=null,curCat="Alle",tip=1,tStep=1,tInt=null;
+
+function bc(t){return t==="Bestseller"?"#FF6B35":t==="Scharf"?"#EF4444":"#10B981";}
+
+function cardHTML(p){
+  const badges=p.tags.map(t=>`<span class="badge" style="color:${bc(t)};background:${bc(t)}22;border-color:${bc(t)}44">${t}</span>`).join('');
+  return `<div class="product-card" onclick="openP(${p.id})">
+    <div class="product-emoji-box">${p.emoji}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">${p.name}</div>
+      <div style="font-size:10px;color:#555;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.desc}</div>
+      <div style="display:flex;align-items:center;gap:6px"><span style="color:#FFB800;font-size:10px">${'★'.repeat(Math.floor(p.rating))} ${p.rating}</span><span style="font-size:9px;color:#555">· ⏱ ${p.time}</span></div>
+      <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">${badges}</div>
+    </div>
+    <div><div style="font-size:14px;font-weight:800;color:#FF6B35;text-align:right">€${p.price.toFixed(2)}</div>
+    <button class="add-btn" onclick="event.stopPropagation();addC(${p.id},[])">+</button></div>
+  </div>`;
+}
+
+document.getElementById('home-products').innerHTML=PRODUCTS.filter(p=>p.popular).map(cardHTML).join('');
+
+function renderMenu(){
+  const f=curCat==="Alle"?PRODUCTS:PRODUCTS.filter(p=>p.category===curCat);
+  document.getElementById('menu-products').innerHTML=f.map(cardHTML).join('');
+  document.getElementById('cat-scroll').innerHTML=CATEGORIES.map(c=>`<button class="cat-btn${c===curCat?' active':''}" onclick="setCat('${c}')">${c}</button>`).join('');
+}
+renderMenu();
+
+function setCat(c){curCat=c;renderMenu();}
+
+function showScreen(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+n).classList.add('active');
+  const nb=document.getElementById('nav-'+n);
+  if(nb)nb.classList.add('active');
+  window.scrollTo(0,0);
+  if(n==='cart')renderCart();
+  if(n==='track')startTrack();
+  if(n==='menu')renderMenu();
+  if(n==='mood')renderMoods();
+}
+
+function openP(id){
+  curP=PRODUCTS.find(x=>x.id===id);
+  curQty=1;selIng=[...curP.ingredients];
+  document.getElementById('detail-emoji').textContent=curP.emoji;
+  document.getElementById('detail-name').textContent=curP.name;
+  document.getElementById('detail-price').textContent='€'+curP.price.toFixed(2);
+  document.getElementById('detail-desc').textContent=curP.desc;
+  document.getElementById('detail-stars').textContent='★'.repeat(Math.floor(curP.rating))+' '+curP.rating;
+  document.getElementById('detail-time').textContent='· ⏱ '+curP.time;
+  document.getElementById('detail-tags').innerHTML=curP.tags.map(t=>`<span class="badge" style="color:${bc(t)};background:${bc(t)}22;border-color:${bc(t)}44">${t}</span>`).join(' ');
+  document.getElementById('qty-num').textContent='1';
+  rIng();rExtra();updBtn();
+  showScreen('product');
+}
+
+function rIng(){
+  document.getElementById('ing-chips').innerHTML=curP.ingredients.map(i=>{
+    const on=selIng.includes(i);
+    return `<button class="ingredient-chip${on?' on':''}" onclick="tIng('${i}')">${i}</button>`;
+  }).join('');
+}
+function rExtra(){
+  document.getElementById('extra-chips').innerHTML=EXTRAS.map(e=>{
+    const on=selIng.includes(e);
+    return `<button class="ingredient-chip extra${on?' on':''}" onclick="tExtra('${e}')">${e}</button>`;
+  }).join('');
+}
+function tIng(i){selIng.includes(i)?selIng=selIng.filter(x=>x!==i):selIng.push(i);rIng();}
+function tExtra(e){selIng.includes(e)?selIng=selIng.filter(x=>x!==e):selIng.push(e);rExtra();}
+function chQty(d){curQty=Math.max(1,curQty+d);document.getElementById('qty-num').textContent=curQty;updBtn();}
+function updBtn(){if(curP)document.getElementById('atc-btn').textContent='🛒 In den Warenkorb · €'+(curP.price*curQty).toFixed(2);}
+function addCurrent(){if(curP){addC(curP.id,[...selIng],curQty);showScreen('cart');}}
+
+function addC(id,extras=[],qty=1){
+  const p=PRODUCTS.find(x=>x.id===id);
+  const ex=cart.find(x=>x.id===id);
+  if(ex){ex.qty+=qty;}else{cart.push({...p,qty,extras});}
+  updCartBadge();
+}
+function updCartBadge(){
+  const t=cart.reduce((a,b)=>a+b.qty,0);
+  document.getElementById('nav-cart-label').textContent=t>0?`Korb (${t})`:'Korb';
+}
+function setTip(v,btn){
+  tip=v;
+  document.querySelectorAll('.tip-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderCartSummary();
+}
+function renderCart(){
+  const empty=cart.length===0;
+  document.getElementById('cart-empty').style.display=empty?'block':'none';
+  document.getElementById('cart-checkout').style.display=empty?'none':'block';
+  if(empty)return;
+  document.getElementById('cart-items').innerHTML=cart.map(item=>`
+    <div class="cart-item">
+      <div style="font-size:32px">${item.emoji}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:700">${item.name}</div><div style="font-size:12px;color:#FF6B35;font-weight:700">€${(item.price*item.qty).toFixed(2)}</div></div>
+      <div class="qty-ctrl" style="border-radius:10px">
+        <button class="qty-btn" style="width:30px;height:30px;font-size:16px" onclick="cQty(${item.id},-1)">−</button>
+        <div style="width:22px;text-align:center;font-size:13px;font-weight:800">${item.qty}</div>
+        <button class="qty-btn" style="width:30px;height:30px;font-size:16px;color:#FF6B35" onclick="cQty(${item.id},1)">+</button>
+      </div>
+    </div>`).join('');
+  renderCartSummary();
+}
+function cQty(id,d){cart=cart.map(x=>x.id===id?{...x,qty:x.qty+d}:x).filter(x=>x.qty>0);updCartBadge();renderCart();}
+function renderCartSummary(){
+  const sub=cart.reduce((a,b)=>a+b.price*b.qty,0);
+  document.getElementById('cart-summary').innerHTML=`
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:#777">Zwischensumme</span><span style="font-size:12px;color:#bbb">€${sub.toFixed(2)}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:#777">Liefergebühr</span><span style="font-size:12px;color:#bbb">€2.50</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:#777">Trinkgeld</span><span style="font-size:12px;color:#bbb">€${tip.toFixed(2)}</span></div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between"><span style="font-size:14px;font-weight:800">Gesamt</span><span style="font-size:14px;font-weight:800;color:#FF6B35">€${(sub+2.5+tip).toFixed(2)}</span></div>`;
+}
+
+function renderMoods(){
+  selMood=null;
+  document.getElementById('reveal-btn').style.display='none';
+  document.getElementById('mood-results').innerHTML='';
+  document.getElementById('mood-grid').innerHTML=MOODS.map((m,i)=>`
+    <button class="mood-btn" onclick="selM(${i},this)">
+      <div style="font-size:28px;margin-bottom:5px">${m.emoji}</div>
+      <div style="font-size:11px;font-weight:700;color:#777">${m.label}</div>
+    </button>`).join('');
+}
+function selM(i,btn){selMood=i;document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.getElementById('reveal-btn').style.display='block';document.getElementById('mood-results').innerHTML='';}
+function revealMood(){
+  if(selMood===null)return;
+  const m=MOODS[selMood];
+  const s=m.suggest.map(id=>PRODUCTS.find(p=>p.id===id)).filter(Boolean);
+  document.getElementById('mood-results').innerHTML=`
+    <div style="font-size:13px;font-weight:800;color:#A855F7;margin-bottom:12px">Perfekt für ${m.emoji} ${m.label}:</div>
+    ${s.map(p=>`<div class="mood-suggestion"><div style="font-size:36px">${p.emoji}</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${p.name}</div><div style="font-size:12px;color:#A855F7;font-weight:700">€${p.price.toFixed(2)}</div></div><button onclick="addC(${p.id},[]);showScreen('cart')" style="padding:7px 12px;border-radius:10px;border:none;background:#A855F7;color:#fff;font-size:12px;font-weight:700;cursor:pointer">+ Hinzufügen</button></div>`).join('')}`;
+  document.getElementById('reveal-btn').style.display='none';
+}
+
+function gPhase(p){['invite','collecting','splitting'].forEach(x=>document.getElementById('group-'+x).style.display='none');document.getElementById('group-'+p).style.display='block';}
+
+function startTrack(){
+  tStep=1;renderTrack();
+  if(tInt)clearInterval(tInt);
+  tInt=setInterval(()=>{if(tStep<TRACK_STEPS.length){tStep++;renderTrack();const r=Math.max(0,18-tStep*3);document.getElementById('eta-badge').textContent=r>0?`⏱ ~${r} Min`:'🎉 Zugestellt!';}else clearInterval(tInt);},2500);
+}
+function renderTrack(){
+  document.getElementById('track-steps').innerHTML=TRACK_STEPS.map((s,i)=>{
+    const done=i<tStep,cur=i===tStep-1;
+    return `<div class="track-step"><div style="display:flex;flex-direction:column;align-items:center">
+      <div class="step-circle" style="background:${done?'rgba(16,185,129,0.2)':'rgba(255,255,255,0.04)'};border:2px solid ${done?'#10B981':'rgba(255,255,255,0.1)'}">${done?'✓':s.icon}</div>
+      ${i<TRACK_STEPS.length-1?`<div style="width:2px;height:22px;background:${done&&i<tStep-1?'#10B981':'rgba(255,255,255,0.07)'};transition:all 0.5s"></div>`:''}
+    </div><div style="padding-top:6px;padding-bottom:18px">
+      <div style="font-size:12px;font-weight:700;color:${done?'#fff':'#444'}">${s.label}</div>
+      ${cur?'<div style="font-size:10px;color:#10B981;margin-top:2px">Gerade passiert...</div>':''}
+    </div></div>`;
+  }).join('');
+}
+
+if(window.Telegram&&window.Telegram.WebApp){const tg=window.Telegram.WebApp;tg.expand();tg.setHeaderColor('#0E1621');tg.setBackgroundColor('#0E1621');}
+</script>
 </body>
 </html>
