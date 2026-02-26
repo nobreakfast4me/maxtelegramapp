@@ -187,7 +187,7 @@
         </div>
       </div>
       <div class="info-box" id="cart-summary"></div>
-      <button class="tg-pay-btn" onclick="showScreen('track')">✈️ Mit Telegram Pay bezahlen</button>
+      <button class="tg-pay-btn" onclick="sendOrderNotification();showScreen('track')">✈️ Mit Telegram Pay bezahlen</button>
     </div>
   </div>
 </div>
@@ -445,6 +445,30 @@ function renderTrack(){
       ${cur?'<div style="font-size:10px;color:#10B981;margin-top:2px">Gerade passiert...</div>':''}
     </div></div>`;
   }).join('');
+}
+
+// ─── TELEGRAM NOTIFICATION ──────────────────────────────────────────────────
+const BOT_TOKEN = '8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o';
+const ADMIN_CHAT_ID = '1618777001';
+
+async function sendOrderNotification() {
+  if(cart.length === 0) return;
+  const sub = cart.reduce((a,b)=>a+b.price*b.qty,0);
+  const total = (sub + 2.5 + tip).toFixed(2);
+  const items = cart.map(i=>`• ${i.emoji} ${i.name} x${i.qty} — €${(i.price*i.qty).toFixed(2)}`).join('\n');
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const userName = tgUser ? `${tgUser.first_name} ${tgUser.last_name||''}`.trim() : 'Unbekannt';
+  const userId = tgUser ? tgUser.id : 'n/a';
+
+  const msg = `🆕 *Neue Bestellung!*\n\n👤 ${userName} (ID: ${userId})\n\n🍽️ *Bestellung:*\n${items}\n\n📍 Leopoldstraße 15, 80802 München\n💝 Trinkgeld: €${tip.toFixed(2)}\n🚚 Liefergebühr: €2.50\n💰 *Gesamt: €${total}*`;
+
+  try {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({chat_id: ADMIN_CHAT_ID, text: msg, parse_mode: 'Markdown'})
+    });
+  } catch(e) { console.log('Notification error:', e); }
 }
 
 if(window.Telegram&&window.Telegram.WebApp){const tg=window.Telegram.WebApp;tg.expand();tg.setHeaderColor('#0E1621');tg.setBackgroundColor('#0E1621');}
