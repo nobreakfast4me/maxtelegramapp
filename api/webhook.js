@@ -1,8 +1,185 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(200).json({ ok: true });
 
-  // ⚡ Respond to Telegram IMMEDIATELY to prevent timeout
-  res.status(200).json({ ok: true });
+  const BOT_TOKEN = '8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o';
+  const OWNER_ID = '1618777001';
+  const OWNER_USERNAME = 'Maxknoepfle';
+  const BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
+
+  const post = (method, body) => fetch(`${BASE}/${method}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  const send = (chat_id, text, extra = {}) =>
+    post('sendMessage', { chat_id, text, parse_mode: 'Markdown', ...extra });
+
+  const answerCb = (id) =>
+    post('answerCallbackQuery', { callback_query_id: id, text: '' });
+
+  const removeButtons = (chat_id, message_id) =>
+    post('editMessageReplyMarkup', { chat_id, message_id, reply_markup: { inline_keyboard: [] } });
+
+  const mainMenu = (cid, ot) => ({
+    inline_keyboard: [
+      [{ text: '📍 Wo ist meine Bestellung?', callback_data: `location|${cid}|${ot}` }],
+      [{ text: '⏱ Wie lange noch?', callback_data: `eta|${cid}|${ot}` }],
+      [{ text: '➕ Extra hinzufügen', callback_data: `extra|${cid}|${ot}` }],
+      [{ text: '🔄 Bestellung ändern', callback_data: `change|${cid}|${ot}` }],
+      [{ text: '❌ Stornieren', callback_data: `cancel|${cid}|${ot}` }],
+      [{ text: '💬 Direkt mit Max schreiben', url: `https://t.me/${OWNER_USERNAME}` }],
+    ]
+  });
+
+  const body = req.body;
+
+  try {
+    if (body.callback_query) {
+      const cb = body.callback_query;
+      const parts = cb.data.split('|');
+      const action = parts[0];
+      const cid = parts[1];
+      const ot = parts[2];
+      const msgId = cb.message.message_id;
+      const fromId = String(cb.from.id);
+
+      await answerCb(cb.id);
+
+      if (action === 'confirm') {
+        await removeButtons(OWNER_ID, msgId);
+        await send(OWNER_ID, `✅ *Bestätigt!* Kunde wird benachrichtigt.`, {
+          reply_markup: { inline_keyboard: [[{ text: '💬 Chat mit Kunde', url: `tg://user?id=${cid}` }]] }
+        });
+        if (cid && cid !== 'undefined' && cid.length > 3) {
+          await send(cid,
+            `✅ *Deine Bestellung wurde bestätigt!* 🎉\n\nDein Essen wird jetzt frisch zubereitet 👨‍🍳\n\nWas brauchst du?`,
+            { reply_markup: mainMenu(cid, ot) }
+          );
+        }
+
+      } else if (action === 'decline') {
+        await removeButtons(OWNER_ID, msgId);
+        await send(OWNER_ID, '❌ Abgelehnt.');
+        if (cid && cid !== 'undefined' && cid.length > 3) {
+          await send(cid,
+            `❌ *Deine Bestellung wurde leider abgelehnt.*\n\nBitte versuche es erneut oder schreib Max direkt.`,
+            { reply_markup: { inline_keyboard: [[{ text: '💬 Max kontaktieren', url: `https://t.me/${OWNER_USERNAME}` }]] } }
+          );
+        }
+
+      } else if (action === 'location') {
+        await send(fromId, `📍 *Aktueller Status:*`, {
+          reply_markup: { inline_keyboard: [
+            [{ text: '👨‍🍳 Wird gekocht', callback_data: `setstatus|gekocht|${cid}|${ot}` }],
+            [{ text: '📦 Wird verpackt', callback_data: `setstatus|verpackt|${cid}|${ot}` }],
+            [{ text: '🛵 Fahrer unterwegs', callback_data: `setstatus|unterwegs|${cid}|${ot}` }],
+            [{ text: '🏠 Gleich da!', callback_data: `setstatus|gleich|${cid}|${ot}` }],
+            [{ text: '↩️ Zurück', callback_data: `menu|${cid}|${ot}` }],
+          ]}
+        });
+
+      } else if (action === 'setstatus') {
+        const map = {
+          gekocht: '👨‍🍳 Wird gerade frisch gekocht — noch ~15-20 Min.',
+          verpackt: '📦 Wird verpackt. Fahrer kommt gleich!',
+          unterwegs: '🛵 Fahrer unterwegs — noch ~10-15 Min.',
+          gleich: '🏠 Fahrer ist fast da — < 5 Min!',
+        };
+        const custId = parts[2];
+        await send(custId, `📍 *Status:*\n\n${map[parts[1]]}`, { reply_markup: mainMenu(custId, parts[3]) });
+
+      } else if (action === 'eta') {
+        const ordered = parseInt(ot || '0');
+        const elapsed = Math.floor((Date.now() - ordered) / 60000);
+        const remaining = Math.max(5, 30 - elapsed);
+        await send(fromId, `⏱ *Noch ca. ${remaining} Minuten!*\n\n_Bestellung vor ${elapsed} Min aufgegeben._`, {
+          reply_markup: mainMenu(fromId, ot)
+        });
+
+      } else if (action === 'extra') {
+        const ordered = parseInt(ot || '0');
+        const mins = Math.floor(10 - (Date.now() - ordered) / 60000);
+        if (mins > 0) {
+          await send(fromId, `➕ *Extra hinzufügen*\n\nNoch *${mins} Minuten* im Zeitfenster!`, {
+            reply_markup: { inline_keyboard: [
+              [{ text: '🧀 Extra Käse +€1.00', callback_data: `addextra|Käse|${fromId}|${ot}` }],
+              [{ text: '🌶️ Chili-Öl +€0.50', callback_data: `addextra|Chili-Öl|${fromId}|${ot}` }],
+              [{ text: '🥤 Cola +€2.50', callback_data: `addextra|Cola|${fromId}|${ot}` }],
+              [{ text: '🍟 Pommes +€3.50', callback_data: `addextra|Pommes|${fromId}|${ot}` }],
+              [{ text: '↩️ Zurück', callback_data: `menu|${fromId}|${ot}` }],
+            ]}
+          });
+        } else {
+          await send(fromId, `⏰ *Zeitfenster abgelaufen.*\n\nDeine Bestellung kann nicht mehr geändert werden.`, {
+            reply_markup: mainMenu(fromId, ot)
+          });
+        }
+
+      } else if (action === 'addextra') {
+        const extraName = parts[1];
+        const custId = parts[2];
+        await send(custId, `✅ *${extraName}* wurde hinzugefügt!`, { reply_markup: mainMenu(custId, parts[3]) });
+        await send(OWNER_ID, `➕ *Extra-Wunsch:* "${extraName}" hinzufügen!`);
+
+      } else if (action === 'change') {
+        await send(fromId, `🔄 *Was möchtest du ändern?*`, {
+          reply_markup: { inline_keyboard: [
+            [{ text: '🥬 Zutat entfernen', callback_data: `changetype|zutat|${cid}|${ot}` }],
+            [{ text: '➕ Artikel hinzufügen', callback_data: `extra|${cid}|${ot}` }],
+            [{ text: '📍 Adresse ändern', callback_data: `changeaddr|${cid}|${ot}` }],
+            [{ text: '🚫 Stornieren', callback_data: `cancel|${cid}|${ot}` }],
+            [{ text: '↩️ Zurück', callback_data: `menu|${cid}|${ot}` }],
+          ]}
+        });
+
+      } else if (action === 'changeaddr') {
+        await send(fromId, `📍 Schreib deine neue Adresse als Nachricht in diesen Chat.`);
+        await send(OWNER_ID, `📍 *Kunde möchte Adresse ändern!*`);
+
+      } else if (action === 'changetype') {
+        await send(fromId, `🥬 Schreib die Zutat die du entfernen möchtest als Nachricht.`);
+        await send(OWNER_ID, `🥬 *Kunde möchte Zutat entfernen!*`);
+
+      } else if (action === 'cancel') {
+        await send(fromId, `❌ *Wirklich stornieren?*`, {
+          reply_markup: { inline_keyboard: [
+            [{ text: '✅ Ja, stornieren', callback_data: `confirmcancel|${cid}|${ot}` }],
+            [{ text: '↩️ Nein, zurück', callback_data: `menu|${cid}|${ot}` }],
+          ]}
+        });
+
+      } else if (action === 'confirmcancel') {
+        await send(fromId, `✅ Bestellung storniert. Bis bald! 👋`);
+        await send(OWNER_ID, `❌ *Kunde hat storniert!*`);
+
+      } else if (action === 'menu') {
+        await send(fromId, `Was kann ich für dich tun?`, { reply_markup: mainMenu(fromId, ot) });
+      }
+
+    } else if (body.message?.text) {
+      const msg = body.message;
+      const chatId = String(msg.chat.id);
+      const text = msg.text;
+      const userName = msg.from.username ? `@${msg.from.username}` : msg.from.first_name;
+
+      if (text.startsWith('/start')) {
+        await send(chatId,
+          `👋 *Hey ${msg.from.first_name}!*\n\nDu bist jetzt mit Max Delivery verbunden ✅\n\n⏳ Sobald Max deine Bestellung bestätigt bekommst du hier alle Updates!`
+        );
+      } else if (chatId !== OWNER_ID) {
+        await send(OWNER_ID, `💬 *Nachricht von ${userName}:*\n\n"${text}"`, {
+          reply_markup: { inline_keyboard: [[{ text: `💬 ${userName} antworten`, url: `tg://user?id=${chatId}` }]] }
+        });
+        await send(chatId, `✉️ Nachricht weitergeleitet. Max meldet sich gleich! ⚡`);
+      }
+    }
+  } catch(e) {
+    console.error('Webhook error:', e);
+  }
+
+  return res.status(200).json({ ok: true });
+}
 
   const BOT_TOKEN = '8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o';
   const OWNER_ID = '1618777001';
