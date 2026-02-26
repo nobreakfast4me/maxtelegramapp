@@ -471,6 +471,24 @@ async function sendOrderNotification() {
   } catch(e) { console.log('Notification error:', e); }
 }
 
+async function sendOrderNotification(){
+  const BOT_TOKEN='8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o';
+  const CHAT_ID='1618777001';
+  const sub=cart.reduce((a,b)=>a+b.price*b.qty,0);
+  const total=(sub+2.5+tip).toFixed(2);
+  const items=cart.map(i=>`• ${i.emoji} ${i.name} x${i.qty} — €${(i.price*i.qty).toFixed(2)}`).join('\n');
+  const tgUser=window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const userName=tgUser?`@${tgUser.username||tgUser.first_name}`:'Unbekannt';
+  const msg=`🆕 *Neue Bestellung!*\n\n👤 ${userName}\n\n${items}\n\n📍 Leopoldstraße 15, München\n💝 Trinkgeld: €${tip.toFixed(2)}\n🚚 Liefergebühr: €2.50\n💰 *Gesamt: €${total}*\n\n_Bitte bestätigen oder ablehnen._`;
+  try {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({chat_id:CHAT_ID,text:msg,parse_mode:'Markdown'})
+    });
+  } catch(e){ console.log('Notification error',e); }
+}
+
 if(window.Telegram&&window.Telegram.WebApp){const tg=window.Telegram.WebApp;tg.expand();tg.setHeaderColor('#0E1621');tg.setBackgroundColor('#0E1621');}
 </script>
 </body>
