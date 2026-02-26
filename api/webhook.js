@@ -232,10 +232,10 @@ export default async function handler(req, res) {
     const text = msg.text;
     const userName = msg.from.username ? `@${msg.from.username}` : msg.from.first_name;
 
-    // Handle /start - welcome message
+    // Handle /start - welcome + waiting message
     if (text.startsWith('/start')) {
       await send(chatId,
-        `👋 *Hey ${msg.from.first_name}!*\n\nDanke für deine Bestellung bei Max Delivery! 🍔\n\nSobald Max deine Bestellung bestätigt, bekommst du hier alle Updates und kannst direkt:\n\n📍 Status abfragen\n➕ Extras hinzufügen\n🔄 Bestellung ändern\n\n_Du wirst gleich benachrichtigt!_ ⚡`
+        `👋 *Hey ${msg.from.first_name}!*\n\nDu bist jetzt mit Max Delivery verbunden. ✅\n\n⏳ Deine Bestellung wird gerade von Max geprüft.\n\nSobald er bestätigt, bekommst du hier automatisch alle Updates und Optionen!\n\n_Kein weiterer Schritt nötig — einfach warten._ 🍔`,
       );
       return res.status(200).json({ ok: true });
     }
