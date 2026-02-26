@@ -60,14 +60,24 @@ export default async function handler(req, res) {
     // ── OWNER: Bestätigen ──
     if (action === 'confirm') {
       await editButtons(OWNER_ID, msgId);
-      await send(OWNER_ID,
-        `✅ Bestätigt! Kunde wird benachrichtigt.\n\n[💬 Chat mit Kunde öffnen](tg://user?id=${cid})`,
-        { reply_markup: { inline_keyboard: [[{ text: '💬 Chat mit Kunde', url: `tg://user?id=${cid}` }]] } }
-      );
-      await send(cid,
-        `✅ *Deine Bestellung wurde bestätigt!* 🎉\n\nDein Essen wird jetzt frisch zubereitet. 👨‍🍳\n\n_Was kann ich für dich tun?_`,
-        { reply_markup: mainMenu(cid, ot) }
-      );
+
+      if (cid && cid !== 'undefined' && cid !== '') {
+        // Send owner a direct link to customer chat
+        await send(OWNER_ID,
+          `✅ *Bestätigt!*\n\nKunde wird benachrichtigt. Klick unten um den Chat zu öffnen:`,
+          { reply_markup: { inline_keyboard: [[{ text: `💬 Chat mit Kunde öffnen`, url: `tg://user?id=${cid}` }]] } }
+        );
+        // Send customer the full menu
+        await send(cid,
+          `✅ *Deine Bestellung wurde bestätigt!* 🎉\n\nDein Essen wird jetzt frisch zubereitet. 👨‍🍳\n\nWas brauchst du?`,
+          { reply_markup: mainMenu(cid, ot) }
+        );
+      } else {
+        // No customer ID available (old order or browser test)
+        await send(OWNER_ID,
+          `✅ *Bestätigt!*\n\n⚠️ Kunde konnte nicht automatisch benachrichtigt werden (keine Chat-ID). Bitte manuell kontaktieren.`
+        );
+      }
 
     // ── OWNER: Ablehnen ──
     } else if (action === 'decline') {
@@ -222,7 +232,13 @@ export default async function handler(req, res) {
     const text = msg.text;
     const userName = msg.from.username ? `@${msg.from.username}` : msg.from.first_name;
 
-    if (String(chatId) !== OWNER_ID && text !== '/start') {
+    // Handle /start - welcome message
+    if (text.startsWith('/start')) {
+      await send(chatId,
+        `👋 *Hey ${msg.from.first_name}!*\n\nDanke für deine Bestellung bei Max Delivery! 🍔\n\nSobald Max deine Bestellung bestätigt, bekommst du hier alle Updates und kannst direkt:\n\n📍 Status abfragen\n➕ Extras hinzufügen\n🔄 Bestellung ändern\n\n_Du wirst gleich benachrichtigt!_ ⚡`
+      );
+      return res.status(200).json({ ok: true });
+    }
       await send(OWNER_ID,
         `💬 *Nachricht von ${userName}:*\n\n"${text}"`,
         { reply_markup: { inline_keyboard: [[{ text: `💬 ${userName} antworten`, url: `tg://user?id=${chatId}` }]] } }
