@@ -447,54 +447,37 @@ function renderTrack(){
   }).join('');
 }
 
-// ─── TELEGRAM NOTIFICATION ──────────────────────────────────────────────────
-const BOT_TOKEN = '8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o';
-const ADMIN_CHAT_ID = '1618777001';
-
-async function sendOrderNotification() {
-  if(cart.length === 0) return;
-  const sub = cart.reduce((a,b)=>a+b.price*b.qty,0);
-  const total = (sub + 2.5 + tip).toFixed(2);
-  const items = cart.map(i=>`• ${i.emoji} ${i.name} x${i.qty} — €${(i.price*i.qty).toFixed(2)}`).join('\n');
-  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-  const userName = tgUser ? `${tgUser.first_name} ${tgUser.last_name||''}`.trim() : 'Unbekannt';
-  const userId = tgUser ? tgUser.id : 'n/a';
-
-  const msg = `🆕 *Neue Bestellung!*\n\n👤 ${userName} (ID: ${userId})\n\n🍽️ *Bestellung:*\n${items}\n\n📍 Leopoldstraße 15, 80802 München\n💝 Trinkgeld: €${tip.toFixed(2)}\n🚚 Liefergebühr: €2.50\n💰 *Gesamt: €${total}*`;
-
-  try {
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({chat_id: ADMIN_CHAT_ID, text: msg, parse_mode: 'Markdown'})
-    });
-  } catch(e) { console.log('Notification error:', e); }
-}
-
+// ─── TELEGRAM NOTIFICATION ───────────────────────────────────────────────────
 async function sendOrderNotification(){
-  const BOT_TOKEN='8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o';
-  const CHAT_ID='1618777001';
-  const sub=cart.reduce((a,b)=>a+b.price*b.qty,0);
-  const total=(sub+2.5+tip).toFixed(2);
-  const items=cart.map(i=>`• ${i.emoji} ${i.name} x${i.qty} — €${(i.price*i.qty).toFixed(2)}`).join('\n');
-  const tgUser=window.Telegram?.WebApp?.initDataUnsafe?.user;
-  const userName=tgUser?`@${tgUser.username||tgUser.first_name}`:'Unbekannt';
-  const customerChatId=tgUser?.id||'';
-  const orderTime=Date.now();
-  const msg=`🆕 *Neue Bestellung!*\n\n👤 ${userName}\n\n${items}\n\n📍 Leopoldstraße 15, München\n💝 Trinkgeld: €${tip.toFixed(2)}\n🚚 Liefergebühr: €2.50\n💰 *Gesamt: €${total}*\n\n_Bitte bestätigen oder ablehnen._`;
+  if(cart.length===0) return;
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const customerChatId = tgUser?.id ? String(tgUser.id) : '';
+  const customerName = tgUser ? (tgUser.username ? '@'+tgUser.username : tgUser.first_name) : 'Unbekannt';
+  const orderTime = Date.now();
+  const sub = cart.reduce((a,b)=>a+b.price*b.qty,0);
+  const total = (sub+2.5+tip).toFixed(2);
+  const items = cart.map(i=>`• ${i.emoji} ${i.name} x${i.qty} — €${(i.price*i.qty).toFixed(2)}`).join('\n');
+  const msg = `🆕 *Neue Bestellung!*\n\n👤 ${customerName}\nChat-ID: ${customerChatId}\n\n${items}\n\n📍 Leopoldstraße 15, München\n💝 Trinkgeld: €${tip.toFixed(2)}\n🚚 Liefergebühr: €2.50\n💰 *Gesamt: €${total}*\n\n_Bitte bestätigen oder ablehnen._`;
   try {
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
+    await fetch(`https://api.telegram.org/bot8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o/sendMessage`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:CHAT_ID,text:msg,parse_mode:'Markdown',reply_markup:{inline_keyboard:[[{text:'✅ Bestätigen',callback_data:`confirm|${customerChatId}|${orderTime}`},{text:'❌ Ablehnen',callback_data:`decline|${customerChatId}|${orderTime}`}]]}})
+      body:JSON.stringify({
+        chat_id:'1618777001',
+        text:msg,
+        parse_mode:'Markdown',
+        reply_markup:{inline_keyboard:[[
+          {text:'✅ Bestätigen',callback_data:`confirm|${customerChatId}|${orderTime}`},
+          {text:'❌ Ablehnen',callback_data:`decline|${customerChatId}|${orderTime}`}
+        ]]}
+      })
     });
+    // Open bot chat for customer so bot can message them
+    if(window.Telegram?.WebApp && customerChatId){
+      window.Telegram.WebApp.openTelegramLink(`https://t.me/maxdelivery1907bot?start=go`);
+    }
   } catch(e){ console.log('Notification error',e); }
-  // Auto-open bot chat so customer can receive updates (Telegram requires this once)
-  if(window.Telegram?.WebApp){
-    window.Telegram.WebApp.openTelegramLink('https://t.me/maxdelivery1907bot?start=ordered');
-  }
 }
-
 if(window.Telegram&&window.Telegram.WebApp){
   const tg=window.Telegram.WebApp;
   tg.expand();
