@@ -484,7 +484,7 @@ async function sendOrderNotification(){
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:CHAT_ID,text:msg,parse_mode:'Markdown'})
+      body:JSON.stringify({chat_id:CHAT_ID,text:msg,parse_mode:'Markdown',reply_markup:{inline_keyboard:[[{text:'✅ Bestätigen',callback_data:'confirm'},{text:'❌ Ablehnen',callback_data:'decline'}]]}})
     });
   } catch(e){ console.log('Notification error',e); }
 }
