@@ -139,10 +139,11 @@
 </div>
 
 <div id="screen-product" class="screen">
-  <div id="detail-hero" style="height:220px;background:linear-gradient(135deg,#1A1A2E,#16213E);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
-    <button onclick="showScreen('menu')" style="position:absolute;top:14px;left:14px;z-index:2;background:rgba(0,0,0,0.5);border:none;border-radius:10px;padding:6px 10px;color:#fff;font-size:16px;cursor:pointer">←</button>
-    <img id="detail-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" onerror="this.style.display='none'">
-    <span id="detail-emoji" style="font-size:90px;position:relative;z-index:1"></span>
+  <div id="detail-hero" style="height:260px;background:linear-gradient(135deg,#1A1A2E,#16213E);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+    <button onclick="showScreen('menu')" style="position:absolute;top:14px;left:14px;z-index:3;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);border:none;border-radius:12px;padding:8px 12px;color:#fff;font-size:16px;cursor:pointer">←</button>
+    <img id="detail-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1" onerror="this.style.display='none'">
+    <div style="position:absolute;inset:0;z-index:2;background:linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(14,22,33,0.85) 100%)"></div>
+    <span id="detail-emoji" style="font-size:90px;position:relative;z-index:3"></span>
   </div>
   <div class="section-pad">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
@@ -328,14 +329,38 @@
 
 <script>
 const PRODUCTS = [
-  {id:1,name:"Smash Burger Deluxe",desc:"Doppelter Smash-Patty, karamellisierte Zwiebeln, geheime Sauce",price:14.9,img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop",emoji:"🍔",category:"Burger",rating:4.9,time:"18 Min",ingredients:["Doppelpatty","Käse","Zwiebeln","Salat","Tomate","Geheime Sauce"],tags:["Bestseller","Scharf"],popular:true},
-  {id:2,name:"Truffle Frites",desc:"Hausgemachte Pommes mit Trüffelöl & Parmesan",price:7.5,img:"https://images.unsplash.com/photo-1573080496219-bb964701f03f?w=400&h=300&fit=crop",emoji:"🍟",category:"Beilagen",rating:4.7,time:"12 Min",ingredients:["Kartoffeln","Trüffelöl","Parmesan","Rosmarin","Meersalz"],tags:["Vegetarisch"]},
-  {id:3,name:"Spicy Chicken Wings",desc:"12 Stück in Buffalo-Marinade, 48h eingelegt",price:12.9,img:"https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=400&h=300&fit=crop",emoji:"🍗",category:"Wings",rating:4.8,time:"22 Min",ingredients:["Chicken Wings","Buffalo Sauce","Knoblauch","Honig","Chili"],tags:["Bestseller","Scharf"],popular:true},
-  {id:4,name:"Caesar Salad Premium",desc:"Römischer Salat, hausgemachtes Dressing, Croutons",price:11.9,img:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop",emoji:"🥗",category:"Salate",rating:4.6,time:"10 Min",ingredients:["Romana Salat","Parmesan","Croutons","Anchovis","Caesar Dressing"],tags:["Vegetarisch"]},
-  {id:5,name:"Margherita Napoletana",desc:"San Marzano Tomaten, Büffelmozzarella, Basilikum",price:13.9,img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&h=300&fit=crop",emoji:"🍕",category:"Pizza",rating:4.9,time:"20 Min",ingredients:["San Marzano","Büffelmozzarella","Basilikum","Olivenöl"],tags:["Vegetarisch"],popular:true},
-  {id:6,name:"Mango Lassi",desc:"Frische Alphonso-Mangos, griechischer Joghurt, Kardamom",price:5.5,img:"https://images.unsplash.com/photo-1546173159-315724a31696?w=400&h=300&fit=crop",emoji:"🥭",category:"Getränke",rating:4.8,time:"5 Min",ingredients:["Alphonso Mango","Joghurt","Kardamom","Rosenwasser"],tags:["Vegetarisch"]},
-  {id:7,name:"Ramen Tonkotsu",desc:"72h gekochte Brühe, Chashu Pork, Ajitama Ei, Nori",price:16.9,img:"https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=400&h=300&fit=crop",emoji:"🍜",category:"Ramen",rating:4.9,time:"25 Min",ingredients:["Tonkotsu Brühe","Chashu Pork","Ajitama Ei","Nori","Bambussprossen"],tags:["Bestseller"],popular:true},
-  {id:8,name:"Chocolate Lava Cake",desc:"Warmer Schokoladenkuchen, flüssiger Kern, Vanilleeis",price:8.9,img:"https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=300&fit=crop",emoji:"🍫",category:"Desserts",rating:4.7,time:"15 Min",ingredients:["Valrhona Schokolade","Butter","Eier","Vanilleeis"],tags:["Süß"]},
+  {id:1,name:"Smash Burger Deluxe",desc:"Doppelter Smash-Patty, karamellisierte Zwiebeln, geheime Sauce",price:14.9,
+   img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop&auto=format",
+   detailImg:"https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&h=500&fit=crop&auto=format",
+   emoji:"🍔",category:"Burger",rating:4.9,time:"18 Min",ingredients:["Doppelpatty","Käse","Zwiebeln","Salat","Tomate","Geheime Sauce"],tags:["Bestseller","Scharf"],popular:true},
+  {id:2,name:"Truffle Frites",desc:"Hausgemachte Pommes mit Trüffelöl & Parmesan",price:7.5,
+   img:"https://images.unsplash.com/photo-1573080496219-bb964701f03f?w=400&h=300&fit=crop&auto=format",
+   detailImg:"https://images.unsplash.com/photo-1598679253544-2c97992403ea?w=800&h=500&fit=crop&auto=format",
+   emoji:"🍟",category:"Beilagen",rating:4.7,time:"12 Min",ingredients:["Kartoffeln","Trüffelöl","Parmesan","Rosmarin","Meersalz"],tags:["Vegetarisch"]},
+  {id:3,name:"Spicy Chicken Wings",desc:"12 Stück in Buffalo-Marinade, 48h eingelegt",price:12.9,
+   img:"https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=400&h=300&fit=crop&auto=format",
+   detailImg:"https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=800&h=500&fit=crop&auto=format",
+   emoji:"🍗",category:"Wings",rating:4.8,time:"22 Min",ingredients:["Chicken Wings","Buffalo Sauce","Knoblauch","Honig","Chili"],tags:["Bestseller","Scharf"],popular:true},
+  {id:4,name:"Caesar Salad Premium",desc:"Römischer Salat, hausgemachtes Dressing, Croutons",price:11.9,
+   img:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop&auto=format",
+   detailImg:"https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&h=500&fit=crop&auto=format",
+   emoji:"🥗",category:"Salate",rating:4.6,time:"10 Min",ingredients:["Romana Salat","Parmesan","Croutons","Anchovis","Caesar Dressing"],tags:["Vegetarisch"]},
+  {id:5,name:"Margherita Napoletana",desc:"San Marzano Tomaten, Büffelmozzarella, Basilikum",price:13.9,
+   img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&h=300&fit=crop&auto=format",
+   detailImg:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&h=500&fit=crop&auto=format",
+   emoji:"🍕",category:"Pizza",rating:4.9,time:"20 Min",ingredients:["San Marzano","Büffelmozzarella","Basilikum","Olivenöl"],tags:["Vegetarisch"],popular:true},
+  {id:6,name:"Mango Lassi",desc:"Frische Alphonso-Mangos, griechischer Joghurt, Kardamom",price:5.5,
+   img:"https://images.unsplash.com/photo-1546173159-315724a31696?w=400&h=300&fit=crop&auto=format",
+   detailImg:"https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=800&h=500&fit=crop&auto=format",
+   emoji:"🥭",category:"Getränke",rating:4.8,time:"5 Min",ingredients:["Alphonso Mango","Joghurt","Kardamom","Rosenwasser"],tags:["Vegetarisch"]},
+  {id:7,name:"Ramen Tonkotsu",desc:"72h gekochte Brühe, Chashu Pork, Ajitama Ei, Nori",price:16.9,
+   img:"https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=400&h=300&fit=crop&auto=format",
+   detailImg:"https://images.unsplash.com/photo-1557872943-16a5ac26437e?w=800&h=500&fit=crop&auto=format",
+   emoji:"🍜",category:"Ramen",rating:4.9,time:"25 Min",ingredients:["Tonkotsu Brühe","Chashu Pork","Ajitama Ei","Nori","Bambussprossen"],tags:["Bestseller"],popular:true},
+  {id:8,name:"Chocolate Lava Cake",desc:"Warmer Schokoladenkuchen, flüssiger Kern, Vanilleeis",price:8.9,
+   img:"https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=300&fit=crop&auto=format",
+   detailImg:"https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800&h=500&fit=crop&auto=format",
+   emoji:"🍫",category:"Desserts",rating:4.7,time:"15 Min",ingredients:["Valrhona Schokolade","Butter","Eier","Vanilleeis"],tags:["Süß"]},
 ];
 const CATEGORIES=["Alle","Burger","Pizza","Wings","Ramen","Salate","Beilagen","Desserts","Getränke"];
 const MOODS=[{emoji:"😴",label:"Müde",suggest:[1,7,3]},{emoji:"💪",label:"Fit",suggest:[4,6,2]},{emoji:"🎉",label:"Feierlaune",suggest:[1,3,8]},{emoji:"😰",label:"Gestresst",suggest:[7,8,6]},{emoji:"🔥",label:"Hungrig",suggest:[1,7,5]},{emoji:"🌿",label:"Leicht",suggest:[4,6,2]}];
@@ -423,8 +448,8 @@ function showScreen(n){
 function openP(id){
   curP=PRODUCTS.find(x=>x.id===id);
   curQty=1;selIng=[...curP.ingredients];
-  document.getElementById('detail-img').src = curP.img || '';
-  document.getElementById('detail-emoji').textContent = curP.img ? '' : curP.emoji;
+  document.getElementById('detail-img').src = curP.detailImg || curP.img || '';
+  document.getElementById('detail-emoji').textContent = '';
   document.getElementById('detail-name').textContent=curP.name;
   document.getElementById('detail-price').textContent='€'+curP.price.toFixed(2);
   document.getElementById('detail-desc').textContent=curP.desc;
