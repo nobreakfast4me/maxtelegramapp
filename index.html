@@ -499,7 +499,7 @@ async function sendOrderNotification(){
   const sub = cart.reduce((a,b)=>a+b.price*b.qty,0);
   const total = (sub+2.5+tip).toFixed(2);
   const items = cart.map(i=>`• ${i.emoji} ${i.name} x${i.qty} — €${(i.price*i.qty).toFixed(2)}`).join('\n');
-  const msg = `🆕 *Neue Bestellung!*\n\n👤 ${customerName}\nChat-ID: ${customerChatId}\n\n${items}\n\n📍 Leopoldstraße 15, München\n💝 Trinkgeld: €${tip.toFixed(2)}\n🚚 Liefergebühr: €2.50\n💰 *Gesamt: €${total}*\n\n_Bitte bestätigen oder ablehnen._`;
+  const msg = `🆕 *NEUE BESTELLUNG*\n━━━━━━━━━━━━━━━\n👤 Kunde: ${customerName}\n🔑 Bestell-Nr: #${String(orderTime).slice(-6)}\n━━━━━━━━━━━━━━━\n${items}\n\n📍 Leopoldstraße 15, München\n💝 Trinkgeld: €${tip.toFixed(2)}\n🚚 Liefergebühr: €2.50\n💰 *Gesamt: €${total}*\n━━━━━━━━━━━━━━━\n_Bitte bestätigen oder ablehnen._`;
   try {
     await fetch(`https://api.telegram.org/bot8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o/sendMessage`,{
       method:'POST',
@@ -519,9 +519,11 @@ async function sendOrderNotification(){
 }
 
 let currentOrderTime = null;
+let currentCartSnapshot = '';
 
 async function placeOrder(){
   if(cart.length===0) return;
+  currentCartSnapshot = cart.map(i=>`${i.emoji} ${i.name} x${i.qty}`).join(', ');
   currentOrderTime = await sendOrderNotification();
   cart=[];
   updCartBadge();
@@ -597,9 +599,13 @@ function updateExtraTimer(){
 async function orderExtra(name, price){
   const mins = currentOrderTime ? Math.floor(10 - (Date.now() - currentOrderTime) / 60000) : -1;
   if(mins <= 0){ alert('Zeitfenster abgelaufen!'); return; }
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const customerName = tgUser ? (tgUser.username ? '@'+tgUser.username : tgUser.first_name) : 'Unbekannt';
+  const orderId = currentOrderTime ? String(currentOrderTime).slice(-6) : '------';
+  const cartItems = currentCartSnapshot || 'k.A.';
   await fetch(`https://api.telegram.org/bot8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o/sendMessage`,{
     method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({chat_id:'1618777001', text:`➕ *Extra-Wunsch!*\n\nKunde möchte hinzufügen:\n${name} ${price}`, parse_mode:'Markdown'})
+    body:JSON.stringify({chat_id:'1618777001', text:`➕ *EXTRA-WUNSCH*\n━━━━━━━━━━━━━━━\n👤 Kunde: ${customerName}\n🔑 Bestell-Nr: #${orderId}\n📦 Bestellung: ${cartItems}\n━━━━━━━━━━━━━━━\n➕ Möchte hinzufügen: *${name} ${price}*`, parse_mode:'Markdown'})
   });
   alert(`✅ ${name} wurde angefragt! Max wird es hinzufügen.`);
 }
@@ -607,9 +613,13 @@ async function orderExtra(name, price){
 async function sendQuestion(){
   const q = document.getElementById('question-input').value.trim();
   if(!q) return;
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const customerName = tgUser ? (tgUser.username ? '@'+tgUser.username : tgUser.first_name) : 'Unbekannt';
+  const orderId = currentOrderTime ? String(currentOrderTime).slice(-6) : '------';
+  const cartItems = currentCartSnapshot || 'k.A.';
   await fetch(`https://api.telegram.org/bot8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o/sendMessage`,{
     method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({chat_id:'1618777001', text:`💬 *Frage vom Kunden:*\n\n"${q}"`, parse_mode:'Markdown'})
+    body:JSON.stringify({chat_id:'1618777001', text:`💬 *KUNDENFRAGE*\n━━━━━━━━━━━━━━━\n👤 Kunde: ${customerName}\n🔑 Bestell-Nr: #${orderId}\n📦 Bestellung: ${cartItems}\n━━━━━━━━━━━━━━━\n❓ Frage: "${q}"`, parse_mode:'Markdown'})
   });
   document.getElementById('question-input').value='';
   alert('✅ Frage gesendet! Max meldet sich gleich.');
@@ -617,9 +627,13 @@ async function sendQuestion(){
 
 async function cancelOrder(){
   if(!confirm('Bestellung wirklich stornieren?')) return;
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const customerName = tgUser ? (tgUser.username ? '@'+tgUser.username : tgUser.first_name) : 'Unbekannt';
+  const orderId = currentOrderTime ? String(currentOrderTime).slice(-6) : '------';
+  const cartItems = currentCartSnapshot || 'k.A.';
   await fetch(`https://api.telegram.org/bot8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o/sendMessage`,{
     method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({chat_id:'1618777001', text:`❌ *Kunde hat storniert!*`, parse_mode:'Markdown'})
+    body:JSON.stringify({chat_id:'1618777001', text:`❌ *STORNIERUNG*\n━━━━━━━━━━━━━━━\n👤 Kunde: ${customerName}\n🔑 Bestell-Nr: #${orderId}\n📦 Bestellung: ${cartItems}\n━━━━━━━━━━━━━━━\nKunde hat storniert!`, parse_mode:'Markdown'})
   });
   if(orderInterval) clearInterval(orderInterval);
   showScreen('home');
