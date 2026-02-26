@@ -479,17 +479,37 @@ async function sendOrderNotification(){
   const items=cart.map(i=>`• ${i.emoji} ${i.name} x${i.qty} — €${(i.price*i.qty).toFixed(2)}`).join('\n');
   const tgUser=window.Telegram?.WebApp?.initDataUnsafe?.user;
   const userName=tgUser?`@${tgUser.username||tgUser.first_name}`:'Unbekannt';
+  const customerChatId=tgUser?.id||'';
+  const orderTime=Date.now();
   const msg=`🆕 *Neue Bestellung!*\n\n👤 ${userName}\n\n${items}\n\n📍 Leopoldstraße 15, München\n💝 Trinkgeld: €${tip.toFixed(2)}\n🚚 Liefergebühr: €2.50\n💰 *Gesamt: €${total}*\n\n_Bitte bestätigen oder ablehnen._`;
   try {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:CHAT_ID,text:msg,parse_mode:'Markdown',reply_markup:{inline_keyboard:[[{text:'✅ Bestätigen',callback_data:'confirm'},{text:'❌ Ablehnen',callback_data:'decline'}]]}})
+      body:JSON.stringify({chat_id:CHAT_ID,text:msg,parse_mode:'Markdown',reply_markup:{inline_keyboard:[[{text:'✅ Bestätigen',callback_data:`confirm|${customerChatId}|${orderTime}`},{text:'❌ Ablehnen',callback_data:`decline|${customerChatId}|${orderTime}`}]]}})
     });
   } catch(e){ console.log('Notification error',e); }
+  // Auto-open bot chat so customer can receive updates (Telegram requires this once)
+  if(window.Telegram?.WebApp){
+    window.Telegram.WebApp.openTelegramLink('https://t.me/maxdelivery1907bot?start=ordered');
+  }
 }
 
-if(window.Telegram&&window.Telegram.WebApp){const tg=window.Telegram.WebApp;tg.expand();tg.setHeaderColor('#0E1621');tg.setBackgroundColor('#0E1621');}
+if(window.Telegram&&window.Telegram.WebApp){
+  const tg=window.Telegram.WebApp;
+  tg.expand();
+  tg.setHeaderColor('#0E1621');
+  tg.setBackgroundColor('#0E1621');
+  // Auto-register customer with bot so bot can message them later
+  const user=tg.initDataUnsafe?.user;
+  if(user?.id){
+    fetch(`https://api.telegram.org/bot8621322586:AAEseTenSqpSmmokdmdzWSB82S9pzPBps5o/sendMessage`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({chat_id:user.id,text:`👋 Willkommen bei Max Delivery, ${user.first_name}! Du bekommst hier Updates zu deinen Bestellungen.`})
+    }).catch(()=>{});
+  }
+}
 </script>
 </body>
 </html>
