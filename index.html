@@ -141,7 +141,6 @@
 <div id="screen-product" class="screen">
   <div id="detail-hero" style="height:260px;background:linear-gradient(135deg,#1A1A2E,#16213E);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
     <button onclick="showScreen('menu')" style="position:absolute;top:14px;left:14px;z-index:3;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);border:none;border-radius:12px;padding:8px 12px;color:#fff;font-size:16px;cursor:pointer">←</button>
-    <img id="detail-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;z-index:1" onerror="this.style.display='none'">
     <div style="position:absolute;inset:0;z-index:2;background:linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(14,22,33,0.85) 100%)"></div>
     <span id="detail-emoji" style="font-size:90px;position:relative;z-index:3"></span>
   </div>
@@ -330,37 +329,29 @@
 <script>
 const PRODUCTS = [
   {id:1,name:"Smash Burger Deluxe",desc:"Doppelter Smash-Patty, karamellisierte Zwiebeln, geheime Sauce",price:14.9,
-   img:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F1639557%2Fpexels-photo-1639557.jpeg%3Fw%3D400%26h%3D300",
-   detailImg:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F3944049%2Fpexels-photo-3944049.jpeg%3Fw%3D800",
-   emoji:"🍔",category:"Burger",rating:4.9,time:"18 Min",ingredients:["Doppelpatty","Käse","Zwiebeln","Salat","Tomate","Geheime Sauce"],tags:["Bestseller","Scharf"],popular:true},
+   bg:"linear-gradient(145deg,#7B2D00,#C0392B,#E67E22)",emoji:"🍔",
+   category:"Burger",rating:4.9,time:"18 Min",ingredients:["Doppelpatty","Käse","Zwiebeln","Salat","Tomate","Geheime Sauce"],tags:["Bestseller","Scharf"],popular:true},
   {id:2,name:"Truffle Frites",desc:"Hausgemachte Pommes mit Trüffelöl & Parmesan",price:7.5,
-   img:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F1583884%2Fpexels-photo-1583884.jpeg%3Fw%3D400%26h%3D300",
-   detailImg:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F2983101%2Fpexels-photo-2983101.jpeg%3Fw%3D800",
-   emoji:"🍟",category:"Beilagen",rating:4.7,time:"12 Min",ingredients:["Kartoffeln","Trüffelöl","Parmesan","Rosmarin","Meersalz"],tags:["Vegetarisch"]},
+   bg:"linear-gradient(145deg,#5D4037,#D4A017,#F5C542)",emoji:"🍟",
+   category:"Beilagen",rating:4.7,time:"12 Min",ingredients:["Kartoffeln","Trüffelöl","Parmesan","Rosmarin","Meersalz"],tags:["Vegetarisch"]},
   {id:3,name:"Spicy Chicken Wings",desc:"12 Stück in Buffalo-Marinade, 48h eingelegt",price:12.9,
-   img:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F2338407%2Fpexels-photo-2338407.jpeg%3Fw%3D400%26h%3D300",
-   detailImg:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F60616%2Ffried-chicken-chicken-fried-crunchy-60616.jpeg%3Fw%3D800",
-   emoji:"🍗",category:"Wings",rating:4.8,time:"22 Min",ingredients:["Chicken Wings","Buffalo Sauce","Knoblauch","Honig","Chili"],tags:["Bestseller","Scharf"],popular:true},
+   bg:"linear-gradient(145deg,#7B1010,#C0392B,#E55A1C)",emoji:"🍗",
+   category:"Wings",rating:4.8,time:"22 Min",ingredients:["Chicken Wings","Buffalo Sauce","Knoblauch","Honig","Chili"],tags:["Bestseller","Scharf"],popular:true},
   {id:4,name:"Caesar Salad Premium",desc:"Römischer Salat, hausgemachtes Dressing, Croutons",price:11.9,
-   img:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F1640777%2Fpexels-photo-1640777.jpeg%3Fw%3D400%26h%3D300",
-   detailImg:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F2097090%2Fpexels-photo-2097090.jpeg%3Fw%3D800",
-   emoji:"🥗",category:"Salate",rating:4.6,time:"10 Min",ingredients:["Romana Salat","Parmesan","Croutons","Anchovis","Caesar Dressing"],tags:["Vegetarisch"]},
+   bg:"linear-gradient(145deg,#1B4D1B,#2E7D32,#66BB6A)",emoji:"🥗",
+   category:"Salate",rating:4.6,time:"10 Min",ingredients:["Romana Salat","Parmesan","Croutons","Anchovis","Caesar Dressing"],tags:["Vegetarisch"]},
   {id:5,name:"Margherita Napoletana",desc:"San Marzano Tomaten, Büffelmozzarella, Basilikum",price:13.9,
-   img:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F2147491%2Fpexels-photo-2147491.jpeg%3Fw%3D400%26h%3D300",
-   detailImg:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F1435895%2Fpexels-photo-1435895.jpeg%3Fw%3D800",
-   emoji:"🍕",category:"Pizza",rating:4.9,time:"20 Min",ingredients:["San Marzano","Büffelmozzarella","Basilikum","Olivenöl"],tags:["Vegetarisch"],popular:true},
+   bg:"linear-gradient(145deg,#8B0000,#C0392B,#F39C12)",emoji:"🍕",
+   category:"Pizza",rating:4.9,time:"20 Min",ingredients:["San Marzano","Büffelmozzarella","Basilikum","Olivenöl"],tags:["Vegetarisch"],popular:true},
   {id:6,name:"Mango Lassi",desc:"Frische Alphonso-Mangos, griechischer Joghurt, Kardamom",price:5.5,
-   img:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F3625372%2Fpexels-photo-3625372.jpeg%3Fw%3D400%26h%3D300",
-   detailImg:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F1346345%2Fpexels-photo-1346345.jpeg%3Fw%3D800",
-   emoji:"🥭",category:"Getränke",rating:4.8,time:"5 Min",ingredients:["Alphonso Mango","Joghurt","Kardamom","Rosenwasser"],tags:["Vegetarisch"]},
+   bg:"linear-gradient(145deg,#E65100,#FF8F00,#FFD54F)",emoji:"🥭",
+   category:"Getränke",rating:4.8,time:"5 Min",ingredients:["Alphonso Mango","Joghurt","Kardamom","Rosenwasser"],tags:["Vegetarisch"]},
   {id:7,name:"Ramen Tonkotsu",desc:"72h gekochte Brühe, Chashu Pork, Ajitama Ei, Nori",price:16.9,
-   img:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F884600%2Fpexels-photo-884600.jpeg%3Fw%3D400%26h%3D300",
-   detailImg:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F1547592%2Fpexels-photo-1547592.jpeg%3Fw%3D800",
-   emoji:"🍜",category:"Ramen",rating:4.9,time:"25 Min",ingredients:["Tonkotsu Brühe","Chashu Pork","Ajitama Ei","Nori","Bambussprossen"],tags:["Bestseller"],popular:true},
+   bg:"linear-gradient(145deg,#1A0A00,#4E342E,#D4A017)",emoji:"🍜",
+   category:"Ramen",rating:4.9,time:"25 Min",ingredients:["Tonkotsu Brühe","Chashu Pork","Ajitama Ei","Nori","Bambussprossen"],tags:["Bestseller"],popular:true},
   {id:8,name:"Chocolate Lava Cake",desc:"Warmer Schokoladenkuchen, flüssiger Kern, Vanilleeis",price:8.9,
-   img:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F1126359%2Fpexels-photo-1126359.jpeg%3Fw%3D400%26h%3D300",
-   detailImg:"https://maxtelegramapp.vercel.app/api/img?url=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F3026804%2Fpexels-photo-3026804.jpeg%3Fw%3D800",
-   emoji:"🍫",category:"Desserts",rating:4.7,time:"15 Min",ingredients:["Valrhona Schokolade","Butter","Eier","Vanilleeis"],tags:["Süß"]},
+   bg:"linear-gradient(145deg,#1A0A00,#3E2723,#6D4C41)",emoji:"🍫",
+   category:"Desserts",rating:4.7,time:"15 Min",ingredients:["Valrhona Schokolade","Butter","Eier","Vanilleeis"],tags:["Süß"]},
 ];
 const CATEGORIES=["Alle","Burger","Pizza","Wings","Ramen","Salate","Beilagen","Desserts","Getränke"];
 const MOODS=[{emoji:"😴",label:"Müde",suggest:[1,7,3]},{emoji:"💪",label:"Fit",suggest:[4,6,2]},{emoji:"🎉",label:"Feierlaune",suggest:[1,3,8]},{emoji:"😰",label:"Gestresst",suggest:[7,8,6]},{emoji:"🔥",label:"Hungrig",suggest:[1,7,5]},{emoji:"🌿",label:"Leicht",suggest:[4,6,2]}];
@@ -371,12 +362,20 @@ let cart=[],curP=null,curQty=1,selIng=[],selMood=null,curCat="Alle",tip=1,tStep=
 
 function bc(t){return t==="Bestseller"?"#FF6B35":t==="Scharf"?"#EF4444":"#10B981";}
 
+function imgBox(p, h, fontSize){
+  return `<div style="width:100%;height:${h}px;background:${p.bg};display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;flex-shrink:0">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,0.15),transparent 70%)"></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 70%,rgba(0,0,0,0.3),transparent 60%)"></div>
+    <span style="font-size:${fontSize}px;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5));position:relative;z-index:1">${p.emoji}</span>
+  </div>`;
+}
+
 function cardHTML(p){
   const badges=p.tags.map(t=>`<span class="badge" style="color:${bc(t)};background:${bc(t)}22;border-color:${bc(t)}44">${t}</span>`).join('');
   return `<div class="product-card" onclick="openP(${p.id})">
-    <div class="product-img" style="overflow:hidden">
-      <img src="${p.img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy" onerror="this.style.display='none'">
-      <div style="position:absolute;top:8px;left:8px;display:flex;gap:3px;flex-wrap:wrap">${badges}</div>
+    <div style="position:relative;overflow:hidden">
+      ${imgBox(p,120,58)}
+      <div style="position:absolute;top:8px;left:8px;display:flex;gap:3px;flex-wrap:wrap;z-index:2">${badges}</div>
     </div>
     <div class="product-body">
       <div class="product-name">${p.name}</div>
@@ -389,6 +388,30 @@ function cardHTML(p){
       </div>
       <div class="product-footer">
         <div class="product-price-dark">€${p.price.toFixed(2)}</div>
+        <button class="product-add-btn" onclick="event.stopPropagation();openP(${p.id})">+</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function menuCardHTML(p){
+  const badges=p.tags.map(t=>`<span class="badge" style="color:${bc(t)};background:${bc(t)}22;border-color:${bc(t)}44">${t}</span>`).join('');
+  return `<div class="menu-card" onclick="openP(${p.id})">
+    <div style="width:100px;flex-shrink:0;overflow:hidden;border-radius:0">${imgBox(p,100,44)}</div>
+    <div class="menu-card-body">
+      <div>
+        <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;line-height:1.2">${p.name}</div>
+        <div style="font-size:10px;color:#666;line-height:1.4;margin-bottom:5px">${p.desc}</div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap">${badges}</div>
+      </div>
+      <div class="menu-card-footer">
+        <div>
+          <div style="font-size:14px;font-weight:800;color:#fff">€${p.price.toFixed(2)}</div>
+          <div style="display:flex;align-items:center;gap:3px;margin-top:2px">
+            <span style="color:#FFB800;font-size:10px">${'★'.repeat(Math.floor(p.rating))}</span>
+            <span style="font-size:10px;color:#666">${p.rating} · ${p.time}</span>
+          </div>
+        </div>
         <button class="product-add-btn" onclick="event.stopPropagation();openP(${p.id})">+</button>
       </div>
     </div>
@@ -448,8 +471,10 @@ function showScreen(n){
 function openP(id){
   curP=PRODUCTS.find(x=>x.id===id);
   curQty=1;selIng=[...curP.ingredients];
-  document.getElementById('detail-img').src = curP.detailImg || curP.img || '';
-  document.getElementById('detail-emoji').textContent = '';
+  document.getElementById('detail-hero').style.background = curP.bg;
+  document.getElementById('detail-emoji').textContent = curP.emoji;
+  document.getElementById('detail-emoji').style.fontSize = '100px';
+  document.getElementById('detail-emoji').style.filter = 'drop-shadow(0 12px 30px rgba(0,0,0,0.6))';
   document.getElementById('detail-name').textContent=curP.name;
   document.getElementById('detail-price').textContent='€'+curP.price.toFixed(2);
   document.getElementById('detail-desc').textContent=curP.desc;
